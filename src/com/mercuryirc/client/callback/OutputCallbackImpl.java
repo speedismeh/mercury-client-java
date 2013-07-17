@@ -1,5 +1,6 @@
 package com.mercuryirc.client.callback;
 
+import com.mercuryirc.client.Mercury;
 import com.mercuryirc.client.ui.ApplicationPane;
 import com.mercuryirc.client.ui.Tab;
 import com.mercuryirc.client.ui.model.MessageRow;
@@ -82,14 +83,10 @@ public class OutputCallbackImpl implements OutputCallback {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				Server server = new Server(network, hostname, port, false);
-				User user = new User(server, nick);
-				user.setUserName("mercury");
-				user.setRealName("Mercury IRC Client");
-				Connection conn = new Connection(server, user, new InputCallbackImpl(appPane), new OutputCallbackImpl(appPane));
-				conn.setAcceptAllSSLCerts(true);
-				conn.connect();
-				appPane.getTabPane().create(conn, conn.getServer());
+				Server server = new Server(network, hostname, port, "", false);
+				User local = connection.getLocalUser();
+				User user = new User(server, local.getName(), local.getUserName(), local.getRealName());
+				Mercury.connect(server, user);
 			}
 		});
 	}

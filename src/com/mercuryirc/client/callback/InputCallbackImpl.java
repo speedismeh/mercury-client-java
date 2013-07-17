@@ -1,8 +1,10 @@
 package com.mercuryirc.client.callback;
 
+import com.mercuryirc.client.Mercury;
 import com.mercuryirc.client.ui.ApplicationPane;
 import com.mercuryirc.client.ui.Tab;
 import com.mercuryirc.client.ui.TabPane;
+import com.mercuryirc.client.ui.misc.Tray;
 import com.mercuryirc.client.ui.model.MessageRow;
 import com.mercuryirc.model.Channel;
 import com.mercuryirc.model.Entity;
@@ -13,6 +15,7 @@ import com.mercuryirc.network.Connection;
 import com.mercuryirc.network.callback.InputCallback;
 import javafx.application.Platform;
 
+import java.awt.Toolkit;
 import java.util.List;
 import java.util.Set;
 
@@ -25,7 +28,19 @@ public class InputCallbackImpl implements InputCallback {
 	}
 
 	public void onConnect(final Connection connection) {
-		connection.join("#mercury");
+		User local = connection.getLocalUser();
+		if (local.getNickservPassword() != null) {
+			connection.privmsg(new Message(local, connection.getServer().getUser("NickServ"), "identify " + local.getNickservPassword()), true);
+		}
+		if (local.getAutojoinChannels() != null) {
+			try {
+				Thread.sleep(750);
+			} catch (InterruptedException e) {
+			}
+			for (String channel : local.getAutojoinChannels()) {
+				connection.join(channel);
+			}
+		}
 	}
 
 	@Override
@@ -35,6 +50,11 @@ public class InputCallbackImpl implements InputCallback {
 			public void run() {
 				boolean highlight = message.getMessage().toLowerCase().contains(connection.getLocalUser().getName().toLowerCase());
 				appPane.getTabPane().addTargetedMessage(connection, message, highlight ? MessageRow.Type.HIGHLIGHT : MessageRow.Type.PRIVMSG);
+				if (highlight && !Mercury.getStage().isFocused()) {
+					String title = "Highlighted by " + message.getSource().getName();
+					Tray.notify(title, message.getMessage(), true);
+					Toolkit.getDefaultToolkit().beep();
+				}
 			}
 		});
 	}
@@ -45,6 +65,10 @@ public class InputCallbackImpl implements InputCallback {
 			@Override
 			public void run() {
 				appPane.getTabPane().addUntargetedMessage(connection, message, MessageRow.Type.NOTICE);
+				if (!Mercury.getStage().isFocused()) {
+					Tray.notify("Notice", message.getMessage(), true);
+					Toolkit.getDefaultToolkit().beep();
+				}
 			}
 		});
 	}
@@ -94,19 +118,22 @@ public class InputCallbackImpl implements InputCallback {
 				Message message = new Message(user, channel, "has left the channel");
 				appPane.getTabPane().addTargetedMessage(connection, message, MessageRow.Type.PART);
 				if (user.equals(connection.getLocalUser())) {
-					appPane.getTabPane().close(appPane.getTabPane().get(connection, channel));
+					appPane.getTabPane().close(appPane.getTabPane().get(connection, channel), false);
 				}
 			}
 		});
 	}
 
 	@Override
-	public void onUserQuit(Connection connection, final User user, final String reason) {
+	public void onUserQuit(final Connection connection, final User user, final String reason) {
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				Message message = new Message(user, null, "has quit (" + reason + ")");
 				appPane.getTabPane().addUserStatusMessage(user, message, MessageRow.Type.PART, null);
+				if (user.equals(connection.getLocalUser())) {
+					appPane.getTabPane().close(appPane.getTabPane().get(connection, connection.getServer()), false);
+				}
 			}
 		});
 	}
@@ -169,12 +196,12 @@ public class InputCallbackImpl implements InputCallback {
 
 	@Override
 	public void onError(final Connection connection, final String error) {
-		System.out.println("ERRROROROR " + error);
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
 				Message message = new Message(null, null, error);
 				appPane.getTabPane().addUntargetedMessage(connection, message, MessageRow.Type.ERROR);
+				Toolkit.getDefaultToolkit().beep();
 			}
 		});
 	}

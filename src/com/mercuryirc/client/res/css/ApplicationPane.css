@@ -1,11 +1,16 @@
-.light-pane {
-	-fx-background-color: light-background-color;
-	-fx-border-color: border-color;
+#blank-content {
+	-fx-border-width: 0px 1px 1px 0px;
 }
 
-.dark-pane {
-	-fx-background-color: background-color;
-	-fx-border-color: border-color;
+.list-view {
+	-fx-padding: 0px;
+	-fx-background-color: transparent;
+	-fx-border-width: 0px;
+}
+
+.list-cell {
+	-fx-background-color: transparent;
+	-fx-border-width: 0px;
 }
 
 #tab-button-pane {
@@ -22,11 +27,13 @@
 
 #topic-pane {
 	-fx-border-width: 0px 1px 1px 0px;
+}
+
+#left-topic-box {
 	-fx-padding: 15px 15px 15px 15px;
 }
 
-#topic-pane-channel {
-	-fx-border-width: 0px 1px 1px 0px;
+#left-topic-box-channel {
 	-fx-padding: 8px 15px 15px 15px;
 }
 
@@ -43,6 +50,11 @@
 .topic {
 	-fx-text-fill: control-color;
 	-fx-font-size: 14pt;
+}
+
+#right-topic-box {
+	-fx-padding: 26px 20px 26px 20px;
+	/*-fx-padding: 0px;*/
 }
 
 #user-list {
@@ -77,7 +89,7 @@
 }
 
 #message-pane .scroll-bar:vertical {
-	-fx-padding: 5px 5px 5px 0px;
+	/*-fx-padding: 0px 0px 0px 10px;*/
 }
 
 .scroll-pane {
